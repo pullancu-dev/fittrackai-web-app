@@ -17,6 +17,8 @@
 
 **Try the app:** [https://pullancu-dev.github.io/fittrackai-web-app]
 
+![FitTrackAI](FitTrackAI%20App.jpg)
+
 ## 🛠️ Technologies
 - **Frontend** — HTML5, CSS3, JavaScript (Vanilla JS), Chart.js, PapaParse
 - **Database** — Firebase Firestore (Dual-instance)
