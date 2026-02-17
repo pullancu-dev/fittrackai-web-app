@@ -21,4 +21,4 @@
 - **Frontend** — HTML5, CSS3, JavaScript (Vanilla JS), Chart.js, PapaParse
 - **Database** — Firebase Firestore (Dual-instance)
 - **AI** — Brain.js Neural Networks (5 models), Custom Filipino Food Database (290+ dishes)
-- **Design** — Responsive mobile-first, SVG progress rings
+- **Design** — Mobile-friendly, SVG-based calorie progress ring
