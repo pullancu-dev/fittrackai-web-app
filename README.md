@@ -7,37 +7,11 @@
 ---
 
 ## 🌟 Features
-
-### 📊 FitTrackAI Dashboard
-- Real-time health metrics (BMI, BMR, TDEE, BSA, WHR, WtHR)
-- Body measurements tracking (Height, Weight, Waist, Hip)
-- Nutrition summary (Protein, Carbs, Fat, Food entries)
-- Personalized calorie goals based on TDEE
-- Daily progress visualization
-
-### 🍱 Filipino Meal Planner
-- Automated meal plan generation
-- 290+ Filipino food database
-- Smart meal combinations (Breakfast, Lunch, Dinner, Snacks)
-- Macro-nutrient breakdown
-- Accurate calorie matching (within 10% of target)
-
-### 📝 Food Diary & Calorie Tracking
-- Daily food logging with meal categorization
-- Smart food search with 8 categories
-- Edit and delete entries
-- Real-time remaining calorie calculator
-- Device sync support (mobile/wearable integration)
-
-### 📈 Weight Tracking
-- Visual weight progress charts
-- Weight history log
-- Track changes over time
-
-### 💬 AI Chatbot Assistant
-- Personalized dietary recommendations
-- Custom meal plan generation
-- Filipino food guidance
+- 📊 **Dashboard** — Health metrics (BMI, BMR, TDEE, BSA, WHR, WtHR), body measurements, nutrition summary
+- 🍱 **Filipino Meal Planner** — Auto-generated plans from 290+ food database, macro breakdown, ≤10% calorie accuracy
+- 📝 **Food Diary** — Daily logging, food search, edit/delete entries, device sync
+- 📈 **Weight Tracking** — Visual progress chart, weight history log
+- 💬 **AI Chatbot** — Personalized dietary recommendations, custom meal plans
 
 ## 🎯 Live Demo
 
