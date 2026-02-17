@@ -18,23 +18,7 @@
 **Try the app:** [https://pullancu-dev.github.io/fittrackai-web-app]
 
 ## 🛠️ Technologies
-
-### Core
-- **HTML5, CSS3, JavaScript** (Vanilla JS)
-- **PapaParse** (CSV processing)
-- **Chart.js** (Weight progress visualization)
-
-### Backend & Database
-- **Firebase Firestore** (Dual-instance architecture)
-  - Primary: User profiles & body measurements
-  - Secondary: Nutrition logs & food diary
-- Real-time data synchronization
-
-### AI Integration
-- **Anthropic Claude API** (AI Chatbot via iframe)
-- **Custom Filipino Food Database** (290+ dishes)
-
-### Features
-- Responsive mobile-first design
-- SVG-based progress rings
-- Real-time calorie tracking
+- **Frontend** — HTML5, CSS3, JavaScript (Vanilla JS), Chart.js, PapaParse
+- **Database** — Firebase Firestore (Dual-instance)
+- **AI** — Anthropic Claude API, Custom Filipino Food Database (290+ dishes)
+- **Design** — Responsive mobile-first, SVG progress rings
