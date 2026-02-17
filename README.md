@@ -20,5 +20,5 @@
 ## 🛠️ Technologies
 - **Frontend** — HTML5, CSS3, JavaScript (Vanilla JS), Chart.js, PapaParse
 - **Database** — Firebase Firestore (Dual-instance)
-- **AI** — Anthropic Claude API, Custom Filipino Food Database (290+ dishes)
+- **AI** — Brain.js Neural Networks (5 models), Custom Filipino Food Database (290+ dishes)
 - **Design** — Responsive mobile-first, SVG progress rings
