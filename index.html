@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FitTrackAI</title>
+  
+  <!-- PapaParse for CSV Loading -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f5f5;
+      padding-bottom: 70px;
+      overflow-x: hidden;
+    }
+    
+    /* Login Screen */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    }
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      max-width: 400px;
+      width: 100%;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-logo h1 {
+      font-size: 2rem;
+      color: #1e3a8a;
+      margin-bottom: 0.5rem;
+    }
+    .login-logo p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .login-input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
+    }
+    .login-input:focus {
+      outline: none;
+      border-color: #1e3a8a;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .login-btn:hover {
+      background: #1e40af;
+    }
+    .login-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .login-error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .login-error.show {
+      display: block;
+    }
+    .login-demo {
+      text-align: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .login-demo p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    .login-demo button {
+      background: #f3f4f6;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: #1e3a8a;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Chatbot Floating Button */
+    .chatbot-button {
+      position: fixed;
+      bottom: 90px;  /* Above the bottom navigation */
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+      z-index: 1000;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .chatbot-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(30, 58, 138, 0.6);
+    }
+    .chatbot-button svg {
+      width: 30px;
+      height: 30px;
+      fill: white;
+    }
+    
+    /* Chatbot Modal */
+    .chatbot-modal {
+      position: fixed;
+      bottom: 160px;  /* Above the chatbot button */
+      right: 20px;
+      width: 380px;
+      height: 600px;
+      max-height: calc(100vh - 200px);  /* Don't go too tall */
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: slideIn 0.3s ease-out;
+    }
+    .chatbot-modal.active {
+      display: flex;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .chatbot-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chatbot-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .chatbot-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chatbot-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+      .chatbot-button {
+        bottom: 80px;  /* Adjust for mobile nav */
+      }
+      .chatbot-modal {
+        width: calc(100vw - 40px);
+        height: calc(100vh - 200px);
+        bottom: 150px;
+        right: 20px;
+      }
+    }
+    
+    /* Header */
+    .header {
+      background: #1e3a8a;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      color: #fff;
+    }
+    .header h1 {
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    
+    /* Main Content */
+    .main-content {
+      padding: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      display: none;
+    }
+    .main-content.active {
+      display: block;
+    }
+    
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #000;
+    }
+    .card-subtitle {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Calorie Circle */
+    .calories-circle-container {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+    .calories-circle {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      flex-shrink: 0;
+    }
+    .circle-bg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #e5e7eb;
+    }
+    .progress-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    .progress-ring-circle {
+      fill: none;
+      stroke: #93c5fd;
+      stroke-width: 12;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    .circle-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .circle-content .number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .circle-content .label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    /* Stats */
+    .calories-stats {
+      flex: 1;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .stat-icon {
+      font-size: 1.8rem;
+    }
+    .stat-info .label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .stat-info .value {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #000;
+    }
+    
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .metric-box {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid #e5e7eb;
+    }
+    .metric-box.highlight {
+      background: #eff6ff;
+      border-color: #1e3a8a;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      line-height: 1;
+    }
+    .metric-unit {
+      font-size: 0.75rem;
+      color: #666;
+      font-weight: 500;
+      margin-top: 0.3rem;
+    }
+    .metric-category {
+      font-size: 0.75rem;
+      color: #1e3a8a;
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #666;
+      font-size: 0.95rem;
+    }
+    
+    /* Profile Section */
+    .profile-header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+    }
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: white;
+      font-weight: 700;
+    }
+    .profile-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 0.3rem;
+    }
+    .profile-id {
+      font-size: 0.9rem;
+      color: #666;
+      font-family: monospace;
+    }
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .profile-info-item {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .profile-info-label {
+      font-size: 0.75rem;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    .profile-info-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .logout-btn-profile {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .logout-btn-profile:hover {
+      background: #b91c1c;
+    }
+    
+    /* Add Food Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal {
+      background: white;
+      border-radius: 0;
+      max-width: 100%;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      box-shadow: none;
+    }
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .info-message {
+      background: #e0f2fe;
+      border-left: 4px solid #0284c7;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #0c4a6e;
+      line-height: 1.5;
+    }
+    
+    /* Bottom Navigation - 5 sections */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+      z-index: 1000;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      position: relative;
+    }
+    .nav-item .icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.2rem;
+      transition: transform 0.2s;
+    }
+    .nav-item.add-button .icon {
+      font-size: 2rem;
+      background: #1e3a8a;
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+      position: absolute;
+      top: -28px;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+    }
+    .nav-item .label {
+      font-size: 0.7rem;
+      color: #666;
+      font-weight: 500;
+    }
+    .nav-item.active .icon {
+      color: #1e3a8a;
+      transform: scale(1.1);
+    }
+    .nav-item.active .label {
+      color: #1e3a8a;
+      font-weight: 700;
+    }
+    .nav-item.add-button .label {
+      margin-top: 32px;
+    }
+    
+    
+    /* Meal Plan Styles */
+    .meal-plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .generate-btn {
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.3s;
+    }
+    .generate-btn:hover {
+      background: #1e40af;
+    }
+    .generate-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .meal-section {
+      margin-bottom: 1.5rem;
+    }
+    .meal-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .meal-section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .meal-section-calories {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+    .meal-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .meal-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 3px solid #1e3a8a;
+    }
+    .meal-item-info {
+      flex: 1;
+    }
+    .meal-item-name {
+      font-weight: 600;
+      color: #1e3a8a;
+      margin-bottom: 0.3rem;
+    }
+    .meal-item-macros {
+      font-size: 0.75rem;
+      color: #666;
+      display: flex;
+      gap: 0.8rem;
+    }
+    .meal-item-calories {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      text-align: right;
+    }
+    .meal-item-calories .unit {
+      font-size: 0.7rem;
+      color: #666;
+      font-weight: 500;
+    }
+    .meal-plan-total {
+      background: #eff6ff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      text-align: center;
+      border: 2px solid #1e3a8a;
+    }
+    .meal-plan-total-label {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 0.3rem;
+    }
+    .meal-plan-total-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    
+    /* Food Tabs */
+    .food-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .food-tab {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .food-tab.active {
+      background: white;
+      color: #1e3a8a;
+    }
+    .food-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      gap: 1rem;
+    }
+    .food-info {
+      flex: 1;
+    }
+    .food-title {
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 0.3rem;
+    }
+    .food-verified {
+      color: #16a34a;
+      font-size: 0.8rem;
+    }
+    .food-meta {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .food-add-btn {
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    @media (max-width: 640px) {
+      .calories-circle-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .calories-circle {
+        width: 160px;
+        height: 160px;
+      }
+      .circle-content .number {
+        font-size: 2rem;
+      }
+    }
+  </style>
+  
+  <!-- Chart.js for weight progress chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #1e3a8a;
+      color: white;
+      padding: 0.85rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      z-index: 99999;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success { background: #059669; }
+    .toast.error   { background: #dc2626; }
+
+    /* Edit/Delete Modals */
+    .action-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 99998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .action-modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .action-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transform: scale(0.92);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .action-modal-overlay.show .action-modal {
+      transform: scale(1);
+    }
+    .action-modal h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 0.4rem;
+    }
+    .action-modal p {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1.2rem;
+    }
+    .action-modal input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 1.2rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .action-modal input:focus { border-color: #1e3a8a; }
+    .action-modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .action-modal-buttons button {
+      flex: 1;
+      padding: 0.85rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .action-modal-buttons button:hover { opacity: 0.85; }
+    .btn-cancel { background: #f3f4f6; color: #666; }
+    .btn-save   { background: #1e3a8a; color: white; }
+    .btn-delete { background: #dc2626; color: white; }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastNotif"></div>
+
+  <!-- Edit Entry Modal -->
+  <div class="action-modal-overlay" id="editModal">
+    <div class="action-modal">
+      <h4>✏️ Edit Servings</h4>
+      <p id="editModalFoodName">Food name</p>
+      <input type="number" id="editServingsInput" min="0.25" step="0.25" placeholder="Enter servings" />
+      <div class="action-modal-buttons">
+        <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+        <button class="btn-save" onclick="confirmEditEntry()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="action-modal-overlay" id="deleteModal">
+    <div class="action-modal">
+      <h4>🗑️ Delete Entry</h4>
+      <p id="deleteModalFoodName">Are you sure you want to delete this entry?</p>
+      <div class="action-modal-buttons">
+        <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-delete" onclick="confirmDeleteEntry()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <h1>🤖 FitTrackAI</h1>
+        <p>Your Personalized Health and Nutrition Tracker</p>
+      </div>
+      
+      <div id="loginError" class="login-error"></div>
+      
+      <input 
+        type="text" 
+        id="userIdInput" 
+        class="login-input" 
+        placeholder="Enter your User ID"
+        maxlength="20"
+        onkeypress="if(event.key==='Enter') handleLogin()"
+      />
+      
+      <button id="loginBtn" class="login-btn" onclick="handleLogin()">
+        Login
+      </button>
+      
+      <div class="login-demo">
+        <p>Don't have an account?</p>
+        <button onclick="showRegisterModal()">Get Started</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Registration Info Modal -->
+  <div id="registerModal" class="modal-overlay">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">How to Register</h3>
+        <button class="modal-close" onclick="closeRegisterModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-weight: 600; color: #1e3a8a; margin-bottom: 1rem;">To create your account:</p>
+        <ol style="line-height: 1.8; color: #333; padding-left: 1.5rem;">
+          <li>Visit the facility administrator to register as a member and get your User ID</li>
+          <li>Use the device for your body measurements and health metrics</li>
+          <li>Log in to the app with your User ID</li>
+        </ol>
+      </div>
+      <div style="padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; text-align: right;">
+        <button onclick="closeRegisterModal()" style="background: #1e3a8a; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="hidden">
+    <!-- Header -->
+    <div class="header">
+      <h1>FitTrackAI</h1>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboardContent" class="main-content active">
+      <!-- Today's Calories -->
+      <div class="card">
+        <h3>Today's Calories</h3>
+        <p class="card-subtitle">Balance your intake, reach your goals</p>
+        
+        <div class="calories-circle-container">
+          <div class="calories-circle">
+            <div class="circle-bg"></div>
+            <svg class="progress-ring" viewBox="0 0 180 180">
+              <circle
+                id="progressRing"
+                class="progress-ring-circle"
+                stroke-dasharray="502.4"
+                stroke-dashoffset="502.4"
+                cx="90"
+                cy="90"
+                r="80"
+              />
+            </svg>
+            <div class="circle-content">
+              <div class="number" id="caloriesConsumed">2000</div>
+              <div class="label" id="caloriesLabel">Remaining</div>
+            </div>
+          </div>
+          
+          <div class="calories-stats">
+            <div class="stat-item">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-info">
+                <div class="label">Base Goal</div>
+                <div class="value"><span id="goalCals">2000</span> kcal</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🍽️</div>
+              <div class="stat-info">
+                <div class="label">Food</div>
+                <div class="value"><span id="foodCals">0</span> kcal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nutrition Summary -->
+      <div class="card">
+        <h3>Nutrition Summary</h3>
+        <p class="card-subtitle">Your daily nutrition breakdown</p>
+        
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-label">Protein</div>
+            <div class="metric-value" id="proteinValue">0</div>
+            <div class="metric-unit">grams</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Carbs</div>
+            <div class="metric-value" id="carbsValue">0</div>
+            <div class="metric-unit">grams</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Fat</div>
+            <div class="metric-value" id="fatValue">0</div>
+            <div class="metric-unit">grams</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Entries</div>
+            <div class="metric-value" id="entriesValue">0</div>
+            <div class="metric-unit">meals logged</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Metrics -->
+      <div class="card">
+        <h3>Health Metrics</h3>
+        <p class="card-subtitle">Your body statistics</p>
+        
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-label">BMI</div>
+            <div class="metric-value" id="bmiValue">0</div>
+            <div class="metric-category" id="bmiCategory">--</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Body Type</div>
+            <div class="metric-value" id="bodyTypeValue">--</div>
+            <div class="metric-category" id="bodyTypeCategory">--</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">BMR</div>
+            <div class="metric-value" id="bmrValue">0</div>
+            <div class="metric-unit">kcal/day</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">TDEE</div>
+            <div class="metric-value" id="tdeeValue">0</div>
+            <div class="metric-unit">kcal/day</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">BSA</div>
+            <div class="metric-value" id="bsaValue">0</div>
+            <div class="metric-unit">m²</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">WtHR</div>
+            <div class="metric-value" id="whtrValue">0</div>
+            <div class="metric-category" id="whtrCategory">--</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">WHR</div>
+            <div class="metric-value" id="whrValue">0</div>
+            <div class="metric-category" id="whrCategory">--</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Body Shape</div>
+            <div class="metric-value" id="bodyShapeValue">--</div>
+            <div class="metric-category">Classification</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body Measurements -->
+      <div class="card">
+        <h3>Body Measurements</h3>
+        <p class="card-subtitle">Current measurements</p>
+        
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-label">Height</div>
+            <div class="metric-value" id="heightValue">0</div>
+            <div class="metric-unit">cm</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Weight</div>
+            <div class="metric-value" id="weightValue">0</div>
+            <div class="metric-unit">kg</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Waist</div>
+            <div class="metric-value" id="waistValue">0</div>
+            <div class="metric-unit">cm</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Hip</div>
+            <div class="metric-value" id="hipValue">0</div>
+            <div class="metric-unit">cm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Meal Plan -->
+      <div class="card">
+        <div class="meal-plan-header">
+          <div>
+            <h3>Today's Meal Plan</h3>
+            <p class="card-subtitle">Your meal plan based on your calorie goal</p>
+          </div>
+          <button id="generatePlanBtn" class="generate-btn" onclick="generateMealPlan()">
+            <span>🔄</span>
+            <span>Regenerate Plan</span>
+          </button>
+        </div>
+        
+        <div id="mealPlanContent">
+          <div class="empty-state">⏳ Generating your personalized meal plan...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diary Content -->
+    <div id="diaryContent" class="main-content">
+      <div class="card">
+        <h3>Food Diary</h3>
+        <p class="card-subtitle">Your meals for today</p>
+        <div id="foodDiaryList">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Food Modal (Placeholder) -->
+    <!-- Food Logging Modal -->
+    <div id="addFoodModal" class="modal-overlay">
+      <div class="modal" style="max-width: 100%; height: 100vh; max-height: 100vh; border-radius: 0;">
+        <div class="modal-header" style="position: sticky; top: 0; z-index: 10; background: #1e3a8a; color: white;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <button class="modal-close" onclick="closeAddModal()" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">×</button>
+            <select class="meal-selector" id="mealTypeSelector" style="background: white; color: #1e3a8a; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 1rem;">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snacks">Snacks</option>
+            </select>
+          </div>
+          
+          <div style="display: flex; align-items: center; background: white; border-radius: 12px; padding: 0.8rem; margin-bottom: 1rem; gap: 0.5rem;">
+            <span style="font-size: 1.2rem;">🔍</span>
+            <input type="text" id="foodSearchInput" placeholder="Search foods..." style="flex: 1; border: none; outline: none; font-size: 1rem;" oninput="searchFoods()" />
+            <button onclick="clearFoodSearch()" style="background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1;">×</button>
+          </div>
+          
+          <div class="food-tabs" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch;">
+            <button class="food-tab active" onclick="filterFoodCategory('all')">All</button>
+            <button class="food-tab" onclick="filterFoodCategory('Mixed Dishes & Prepared Foods')">Mixed Dishes</button>
+            <button class="food-tab" onclick="filterFoodCategory('Meat & Poultry')">Meat & Poultry</button>
+            <button class="food-tab" onclick="filterFoodCategory('Fish & Seafood')">Fish & Seafood</button>
+            <button class="food-tab" onclick="filterFoodCategory('Vegetables')">Vegetables</button>
+            <button class="food-tab" onclick="filterFoodCategory('Grains & Cereals')">Grains</button>
+            <button class="food-tab" onclick="filterFoodCategory('Sweets & Desserts')">Sweets</button>
+            <button class="food-tab" onclick="filterFoodCategory('Beverages')">Beverages</button>
+          </div>
+        </div>
+        <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 1rem;">
+          <div style="font-weight: 700; color: #000; margin-bottom: 1rem; font-size: 1.1rem;">Best Match</div>
+          <div id="foodSearchResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Content (Placeholder) -->
+    <div id="progressContent" class="main-content">
+      <div class="card">
+        <h3 style="color: #1e3a8a; margin-bottom: 0.25rem;">Weight Progress Chart</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Visualize your weight changes over time</p>
+        
+        <!-- Chart Container -->
+        <div style="background: #f8f9fa; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
+          <canvas id="weightChart" style="max-height: 250px;"></canvas>
+        </div>
+        
+        <!-- Weight History Table -->
+        <div style="margin-top: 1.5rem;">
+          <h4 style="color: #1e3a8a; margin-bottom: 1rem; font-size: 1.1rem;">Weight History</h4>
+          <div id="weightHistoryTable" style="max-height: 300px; overflow-y: auto;">
+            <!-- Table will be populated by JavaScript -->
+            <div class="empty-state" style="padding: 2rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚖️</div>
+              <div style="color: #666;">Loading weight history...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div id="profileContent" class="main-content">
+      <div class="card">
+        <div class="profile-header">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-name">FitTrackAI User</div>
+          <div class="profile-id" id="profileUserId">--</div>
+        </div>
+        
+        <div class="profile-info-grid">
+          <div class="profile-info-item">
+            <div class="profile-info-label">Age</div>
+            <div class="profile-info-value" id="profileAge">--</div>
+          </div>
+          <div class="profile-info-item">
+            <div class="profile-info-label">Gender</div>
+            <div class="profile-info-value" id="profileGender">--</div>
+          </div>
+          <div class="profile-info-item" style="grid-column: 1 / -1;">
+            <div class="profile-info-label">Last Sync</div>
+            <div class="profile-info-value" style="font-size: 1rem;" id="profileSync">--</div>
+          </div>
+        </div>
+        
+        <button class="logout-btn-profile" onclick="logout()">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation with 5 sections -->
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('dashboard')">
+        <div class="icon">🏠</div>
+        <div class="label">Dashboard</div>
+      </button>
+      
+      <button class="nav-item" onclick="switchTab('diary')">
+        <div class="icon">🍽️</div>
+        <div class="label">Food Diary</div>
+      </button>
+      
+      <button class="nav-item add-button" onclick="openAddModal()">
+        <div class="icon">+</div>
+        <div class="label">Log Food</div>
+      </button>
+      
+      <button class="nav-item" onclick="switchTab('progress')">
+        <div class="icon">📊</div>
+        <div class="label">Weight Tracker</div>
+      </button>
+      
+      <button class="nav-item" onclick="switchTab('profile')">
+        <div class="icon">👤</div>
+        <div class="label">Profile</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, doc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsrZ2vSZWUOUjSuxJSM9ViPMBJ0h9oe68",
+      authDomain: "fittrackai-0906.firebaseapp.com",
+      projectId: "fittrackai-0906",
+      storageBucket: "fittrackai-0906.firebasestorage.app",
+      messagingSenderId: "68336959443",
+      appId: "1:68336959443:web:769e0c4c5d92c86481b926",
+      measurementId: "G-LWF2JB7Y8R"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    console.log('✅ Firebase initialized');
+
+    // Global State
+    let currentUserId = null;
+    let unsubscribers = [];
+
+    // ===== LOGIN HANDLERS =====
+    
+    window.handleLogin = async function() {
+      const userId = document.getElementById('userIdInput').value.trim();
+      
+      if (!userId) {
+        showError('Please enter your User ID');
+        return;
+      }
+
+      document.getElementById('loginBtn').disabled = true;
+      document.getElementById('loginBtn').textContent = 'Logging in...';
+
+      await loginUser(userId);
+    };
+
+    window.loginWithDemo = function() {
+      document.getElementById('userIdInput').value = '2026-S22WE4';
+      handleLogin();
+    };
+
+    async function loginUser(userId) {
+      try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+          showError('User not found. Please check your User ID.');
+          document.getElementById('loginBtn').disabled = false;
+          document.getElementById('loginBtn').textContent = 'Login';
+          return;
+        }
+
+        currentUserId = userId;
+        localStorage.setItem('fittrackai_userId', userId);
+        
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        
+        // Show chatbot button after login
+        document.getElementById('chatbotButton').classList.remove('hidden');
+        
+        // Switch to dashboard IMMEDIATELY before loading data
+        switchTab('dashboard');
+
+        await loadUserData(userId);
+
+        console.log('✅ Login successful:', userId);
+
+      } catch (error) {
+        console.error('Login error:', error);
+        showError('Connection error. Please check your internet and try again.');
+        document.getElementById('loginBtn').disabled = false;
+        document.getElementById('loginBtn').textContent = 'Login';
+      }
+    }
+
+    window.logout = function() {
+      localStorage.removeItem('fittrackai_userId');
+      currentUserId = null;
+      mealPlanGenerated = false; // Reset flag for next login
+
+      unsubscribers.forEach(unsub => unsub());
+      unsubscribers = [];
+      
+      // Hide chatbot button and close modal
+      document.getElementById('chatbotButton').classList.add('hidden');
+      document.getElementById('chatbotModal').classList.remove('active');
+
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      
+      document.getElementById('userIdInput').value = '';
+      document.getElementById('loginBtn').disabled = false;
+      document.getElementById('loginBtn').textContent = 'Login';
+    };
+
+    // ===== DATA LOADING =====
+    
+    async function loadUserData(userId) {
+      try {
+        const userDocRef = doc(db, 'users', userId);
+
+        const unsubscribe = onSnapshot(userDocRef, async (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            console.log('📊 User data updated:', data);
+            
+            updateDashboard(data);
+            updateProfile(data);
+            
+            // Save weight to Firebase 2 history if measurements exist
+            await saveWeightHistory(userId, data);
+          }
+        });
+
+        unsubscribers.push(unsubscribe);
+
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          updateDashboard(data);
+          updateProfile(data);
+          loadFoodDiary(userId);
+          
+          // Save weight to Firebase 2 history
+          await saveWeightHistory(userId, data);
+        }
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showError('Failed to load data. Please try again.');
+      }
+    }
+
+    // ===== WEIGHT HISTORY MANAGEMENT =====
+    
+    async function saveWeightHistory(userId, data) {
+      try {
+        const measurements = data.measurements || {};
+        const weight = measurements.weight_kg;
+        
+        // Only proceed if we have a valid weight
+        if (!weight || weight <= 0) {
+          console.log('No valid weight data to save');
+          return;
+        }
+        
+        // Get today's date in Philippine timezone
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = phTime.toISOString().split('T')[0];
+        
+        // Initialize Firebase 2 (nutrition database)
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, setDoc, getDoc: getDoc2, collection, query, where, getDocs, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        let nutritionApp, nutritionDb;
+        try {
+          nutritionApp = initApp2(nutritionConfig, 'nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        } catch (e) {
+          const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+          nutritionApp = getApp('nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        }
+        
+        // Save weight to Firebase 2 history
+        const weightDocRef = doc2(nutritionDb, 'users', userId, 'weight_history', today);
+        await setDoc(weightDocRef, {
+          weight: weight,
+          date: today,
+          timestamp: phTime.toISOString()
+        }, { merge: true }); // Use merge to avoid overwriting if called multiple times
+        
+        console.log(`✓ Weight saved to history: ${weight} kg on ${today}`);
+        
+        // Clean up: Delete entries older than 90 days
+        const ninetyDaysAgo = new Date(phTime.getTime() - (90 * 24 * 60 * 60 * 1000));
+        const cutoffDate = ninetyDaysAgo.toISOString().split('T')[0];
+        
+        const weightHistoryRef = collection(nutritionDb, 'users', userId, 'weight_history');
+        const oldEntriesQuery = query(weightHistoryRef, where('date', '<', cutoffDate));
+        const oldEntriesSnapshot = await getDocs(oldEntriesQuery);
+        
+        if (!oldEntriesSnapshot.empty) {
+          console.log(`🗑️ Deleting ${oldEntriesSnapshot.size} old weight entries (older than ${cutoffDate})`);
+          const deletePromises = oldEntriesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+          await Promise.all(deletePromises);
+        }
+        
+      } catch (error) {
+        console.error('Error saving weight history:', error);
+        // Don't show error to user, just log it
+      }
+    }
+
+    
+    // ===== WEIGHT PROGRESS CHART =====
+    
+    let weightChart = null;
+    
+    async function loadWeightProgress(userId) {
+      try {
+        // Initialize Firebase 2
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        let nutritionApp, nutritionDb;
+        try {
+          nutritionApp = initApp2(nutritionConfig, 'nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        } catch (e) {
+          const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+          nutritionApp = getApp('nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        }
+        
+        // Fetch weight history (last 90 days)
+        const weightHistoryRef = collection(nutritionDb, 'users', userId, 'weight_history');
+        const weightQuery = query(weightHistoryRef, orderBy('date', 'asc'));
+        const weightSnapshot = await getDocs(weightQuery);
+        
+        if (weightSnapshot.empty) {
+          document.getElementById('weightHistoryTable').innerHTML = `
+            <div class="empty-state" style="padding: 2rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚖️</div>
+              <div style="color: #666; font-weight: 600; margin-bottom: 0.5rem;">No Weight History Yet</div>
+              <div style="color: #999; font-size: 0.85rem;">Weight data from your device will appear here</div>
+            </div>
+          `;
+          return;
+        }
+        
+        // Prepare data for chart and table
+        const weightData = [];
+        weightSnapshot.forEach(doc => {
+          const data = doc.data();
+          weightData.push({
+            date: data.date,
+            weight: data.weight,
+            timestamp: data.timestamp
+          });
+        });
+        
+        // Render Chart
+        renderWeightChart(weightData);
+        
+        // Render Table
+        renderWeightTable(weightData);
+        
+      } catch (error) {
+        console.error('Error loading weight progress:', error);
+        document.getElementById('weightHistoryTable').innerHTML = `
+          <div class="empty-state" style="padding: 2rem;">
+            <div style="color: #dc2626;">Error loading weight history</div>
+            <div style="color: #999; font-size: 0.85rem;">Please try again later</div>
+          </div>
+        `;
+      }
+    }
+    
+    function renderWeightChart(weightData) {
+      const ctx = document.getElementById('weightChart');
+      
+      // Destroy existing chart if it exists
+      if (weightChart) {
+        weightChart.destroy();
+      }
+      
+      const labels = weightData.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      
+      const weights = weightData.map(d => d.weight);
+      
+      weightChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight (kg)',
+            data: weights,
+            borderColor: '#1e3a8a',
+            backgroundColor: 'rgba(30, 58, 138, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#1e3a8a',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#1e3a8a',
+                font: {
+                  size: 14,
+                  weight: 'bold'
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(30, 58, 138, 0.9)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                label: function(context) {
+                  return context.parsed.y + ' kg';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                color: '#666',
+                callback: function(value) {
+                  return value + ' kg';
+                }
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              ticks: {
+                color: '#666',
+                maxRotation: 45,
+                minRotation: 45
+              },
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    function renderWeightTable(weightData) {
+      // Sort by date descending (most recent first)
+      const sortedData = [...weightData].reverse();
+      
+      let html = `
+        <div style="background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                <th style="padding: 0.75rem; text-align: left; font-weight: 700; color: #1e3a8a; font-size: 0.9rem;">Date</th>
+                <th style="padding: 0.75rem; text-align: right; font-weight: 700; color: #1e3a8a; font-size: 0.9rem;">Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      sortedData.forEach((entry, index) => {
+        const date = new Date(entry.date);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+          year: 'numeric',
+          month: 'short', 
+          day: 'numeric' 
+        });
+        
+        html += `
+          <tr style="border-bottom: 1px solid #f3f4f6; ${index % 2 === 0 ? 'background: #fafafa;' : ''}">
+            <td style="padding: 0.75rem; color: #333; font-size: 0.9rem;">${formattedDate}</td>
+            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e3a8a; font-size: 1rem;">${entry.weight} kg</td>
+          </tr>
+        `;
+      });
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      document.getElementById('weightHistoryTable').innerHTML = html;
+    }
+
+    // ===== UI UPDATE FUNCTIONS =====
+    
+    function updateDashboard(data) {
+      const measurements = data.measurements || {};
+      const nutritionSummary = data.nutrition_summary || {};
+
+      const consumed = nutritionSummary.todayKcal || 0;
+      const goal = measurements.health_tdee_kcal_d || 2000;
+      const remaining = goal - consumed;
+
+      // Update TDEE for meal plan generation
+      currentTDEE = goal;
+      
+      // Auto-generate meal plan if not yet generated
+      if (!mealPlanGenerated) {
+        setTimeout(() => {
+          generateMealPlan();
+          mealPlanGenerated = true;
+        }, 1000);
+      }
+
+      // Display exact values from Firebase - no rounding
+      document.getElementById('foodCals').textContent = consumed;
+      document.getElementById('goalCals').textContent = Math.round(goal);
+
+      updateProgressRing(consumed, goal);
+
+      // Display exact macro values
+      document.getElementById('proteinValue').textContent = nutritionSummary.todayProtein || 0;
+      document.getElementById('carbsValue').textContent = nutritionSummary.todayCarbs || 0;
+      document.getElementById('fatValue').textContent = nutritionSummary.todayFat || 0;
+      document.getElementById('entriesValue').textContent = nutritionSummary.todayEntries || 0;
+
+      // Display exact health metrics
+      const bmi = measurements.health_bmi || 0;
+      const whr = measurements.health_whr || 0;
+      const wthr = measurements.health_wthr || 0;
+      const gender = measurements.gender || 'male';
+
+      document.getElementById('bmiValue').textContent = bmi;
+      document.getElementById('bmrValue').textContent = measurements.health_bmr_kcal_d || 0;
+      document.getElementById('tdeeValue').textContent = measurements.health_tdee_kcal_d || 0;
+      document.getElementById('bsaValue').textContent = measurements.health_bsa_m2 || 0;
+      document.getElementById('whrValue').textContent = whr;
+      document.getElementById('whtrValue').textContent = wthr;
+
+      // Body Type
+      const bodyType = data.body_type || {};
+      const classification = bodyType.classification || '--';
+      document.getElementById('bodyTypeValue').textContent = classification;
+      document.getElementById('bodyTypeCategory').textContent = 'Classification';
+
+      // Dynamic BMI category
+      let bmiLabel = '--', bmiColor = '#666';
+      if (bmi > 0) {
+        if (bmi < 18.5)      { bmiLabel = 'Underweight'; bmiColor = '#f59e0b'; }
+        else if (bmi < 25)   { bmiLabel = 'Normal';      bmiColor = '#10b981'; }
+        else if (bmi < 30)   { bmiLabel = 'Overweight';  bmiColor = '#f59e0b'; }
+        else                 { bmiLabel = 'Obese';        bmiColor = '#ef4444'; }
+      }
+      const bmiCat = document.getElementById('bmiCategory');
+      bmiCat.textContent = bmiLabel;
+      bmiCat.style.color = bmiColor;
+
+      // Dynamic WHR category (differs by gender)
+      let whrLabel = '--', whrColor = '#666';
+      if (whr > 0) {
+        const isFemale = gender.toLowerCase() === 'female' || gender.toLowerCase() === 'f';
+        if (isFemale) {
+          if (whr < 0.80)      { whrLabel = 'Health Risk - Low';      whrColor = '#10b981'; }
+          else if (whr < 0.85) { whrLabel = 'Health Risk - Moderate'; whrColor = '#f59e0b'; }
+          else                 { whrLabel = 'Health Risk - High';      whrColor = '#ef4444'; }
+        } else {
+          if (whr < 0.90)      { whrLabel = 'Health Risk - Low';      whrColor = '#10b981'; }
+          else if (whr < 1.00) { whrLabel = 'Health Risk - Moderate'; whrColor = '#f59e0b'; }
+          else                 { whrLabel = 'Health Risk - High';      whrColor = '#ef4444'; }
+        }
+      }
+      const whrCat = document.getElementById('whrCategory');
+      whrCat.textContent = whrLabel;
+      whrCat.style.color = whrColor;
+
+      // Body Shape based on WHR
+      let bodyShape = '--', bodyShapeColor = '#666';
+      if (whr > 0) {
+        const isFemaleShape = gender.toLowerCase() === 'female' || gender.toLowerCase() === 'f';
+        const isHighRisk = isFemaleShape ? whr >= 0.85 : whr >= 1.0;
+        const isModerate = isFemaleShape ? (whr >= 0.80 && whr < 0.85) : (whr >= 0.90 && whr < 1.0);
+        if (isHighRisk)       { bodyShape = 'Apple';   bodyShapeColor = '#ef4444'; }
+        else if (isModerate)  { bodyShape = 'Avocado'; bodyShapeColor = '#f59e0b'; }
+        else                  { bodyShape = 'Pear';    bodyShapeColor = '#10b981'; }
+      }
+      const bodyShapeEl = document.getElementById('bodyShapeValue');
+      bodyShapeEl.textContent = bodyShape;
+      bodyShapeEl.style.color = bodyShapeColor;
+      bodyShapeEl.style.fontSize = '1.8rem';
+
+      // Dynamic WtHR category (gender-based)
+      let wthrLabel = '--', wthrColor = '#666';
+      if (wthr > 0) {
+        const isFemale = gender.toLowerCase() === 'female' || gender.toLowerCase() === 'f';
+        if (isFemale) {
+          if (wthr <= 0.34)      { wthrLabel = 'Extremely Slim';   wthrColor = '#f59e0b'; }
+          else if (wthr <= 0.41) { wthrLabel = 'Slim';             wthrColor = '#60a5fa'; }
+          else if (wthr <= 0.48) { wthrLabel = 'Healthy';          wthrColor = '#10b981'; }
+          else if (wthr <= 0.53) { wthrLabel = 'Overweight';       wthrColor = '#f59e0b'; }
+          else if (wthr <= 0.57) { wthrLabel = 'Very Overweight';  wthrColor = '#f97316'; }
+          else                   { wthrLabel = 'Obese';            wthrColor = '#ef4444'; }
+        } else {
+          if (wthr <= 0.34)      { wthrLabel = 'Extremely Slim';   wthrColor = '#f59e0b'; }
+          else if (wthr <= 0.42) { wthrLabel = 'Slim';             wthrColor = '#60a5fa'; }
+          else if (wthr <= 0.52) { wthrLabel = 'Healthy';          wthrColor = '#10b981'; }
+          else if (wthr <= 0.57) { wthrLabel = 'Overweight';       wthrColor = '#f59e0b'; }
+          else if (wthr <= 0.62) { wthrLabel = 'Very Overweight';  wthrColor = '#f97316'; }
+          else                   { wthrLabel = 'Obese';            wthrColor = '#ef4444'; }
+        }
+      }
+      const wthrCat = document.getElementById('whtrCategory');
+      wthrCat.textContent = wthrLabel;
+      wthrCat.style.color = wthrColor;
+
+      // Display exact body measurements
+      document.getElementById('heightValue').textContent = measurements.height_cm || 0;
+      document.getElementById('weightValue').textContent = measurements.weight_kg || 0;
+      document.getElementById('waistValue').textContent = measurements.health_waist_circ_cm || 0;
+      document.getElementById('hipValue').textContent = measurements.health_hip_circ_cm || 0;
+    }
+
+    function updateProfile(data) {
+      const measurements = data.measurements || {};
+      
+      document.getElementById('profileUserId').textContent = currentUserId;
+      document.getElementById('profileAge').textContent = measurements.age || '--';
+      document.getElementById('profileGender').textContent = measurements.gender || '--';
+      
+      const syncTime = measurements.syncedAt || measurements.timestamp;
+      if (syncTime) {
+        const date = new Date(syncTime);
+        document.getElementById('profileSync').textContent = date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+    }
+
+    function updateProgressRing(consumed, goal) {
+      const ring = document.getElementById('progressRing');
+      const numberEl = document.getElementById('caloriesConsumed');
+      const labelEl = document.getElementById('caloriesLabel');
+      if (!ring) return;
+
+      const percentage = (consumed / goal) * 100;
+      const circumference = 502.4;
+      const isOverGoal = consumed > goal;
+
+      // Always fill full circle if over goal
+      const clampedPercentage = Math.min(percentage, 100);
+      const offset = circumference - (clampedPercentage / 100) * circumference;
+      ring.style.strokeDashoffset = offset;
+
+      if (isOverGoal) {
+        // Over goal — red ring + show how much over
+        ring.style.stroke = '#ef4444';
+        const overBy = Math.round(consumed - goal);
+        numberEl.textContent = overBy;
+        numberEl.style.color = '#ef4444';
+        labelEl.textContent = 'Over Goal';
+        labelEl.style.color = '#ef4444';
+      } else {
+        // Normal — show remaining
+        const remaining = Math.round(goal - consumed);
+        numberEl.textContent = remaining;
+        numberEl.style.color = '#1e3a8a';
+        labelEl.textContent = 'Remaining';
+        labelEl.style.color = '#666';
+
+        if (percentage < 70) {
+          ring.style.stroke = '#93c5fd';
+        } else if (percentage < 90) {
+          ring.style.stroke = '#60a5fa';
+        } else {
+          ring.style.stroke = '#3b82f6';
+        }
+      }
+    }
+
+    async function loadFoodDiary(userId) {
+      try {
+        // Initialize Firebase 2 (fittrackai-nutrition) for reading food logs
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, getDoc: getDoc2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        // Initialize nutrition Firebase (if not already)
+        let nutritionApp, nutritionDb;
+        try {
+          nutritionApp = initApp2(nutritionConfig, 'nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        } catch (e) {
+          const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+          nutritionApp = getApp('nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        }
+        
+        // Get today's date in Philippine timezone (UTC+8)
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for PH timezone
+        const today = phTime.toISOString().split('T')[0];
+        
+        // STEP 1: Fetch from Firebase 1 (device nutrition summary)
+        let deviceKcal = 0;
+        let deviceProtein = 0;
+        let deviceCarbs = 0;
+        let deviceFat = 0;
+        let deviceEntries = 0;
+        
+        try {
+          const deviceDocRef = doc2(db, 'users', userId); // Use main Firebase db
+          const deviceDoc = await getDoc2(deviceDocRef);
+          
+          if (deviceDoc.exists() && deviceDoc.data().nutrition_summary) {
+            const summary = deviceDoc.data().nutrition_summary;
+            // Check if the device data is from today
+            if (summary.lastLogDate === today) {
+              deviceKcal = summary.todayKcal || 0;
+              deviceProtein = summary.todayProtein || 0;
+              deviceCarbs = summary.todayCarbs || 0;
+              deviceFat = summary.todayFat || 0;
+              deviceEntries = summary.todayEntries || 0;
+            }
+          }
+        } catch (err) {
+          console.log('No device data found or error fetching:', err);
+        }
+        
+        // STEP 2: Fetch from Firebase 2 (mobile app food logs)
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        const logDoc = await getDoc2(logDocRef);
+        const container = document.getElementById('foodDiaryList');
+
+        const entries = (logDoc.exists() && logDoc.data().entries) ? logDoc.data().entries : [];
+        
+        // Group entries by meal type
+        const mealGroups = {
+          breakfast: [],
+          lunch: [],
+          dinner: [],
+          snacks: []
+        };
+        
+        // Calculate totals from mobile app logs (Firebase 2)
+        let mobileKcal = 0;
+        let mobileProtein = 0;
+        let mobileCarbs = 0;
+        let mobileFat = 0;
+        
+        entries.forEach(entry => {
+          const mealType = entry.meal || 'snacks';
+          if (mealGroups[mealType]) {
+            mealGroups[mealType].push(entry);
+          }
+          
+          mobileKcal += entry.kcal || 0;
+          mobileProtein += entry.protein_g || 0;
+          mobileCarbs += entry.carb_g || 0;
+          mobileFat += entry.fat_g || 0;
+        });
+        
+        // STEP 3: Combine Firebase 1 (device) + Firebase 2 (mobile app)
+        const totalKcal = deviceKcal + mobileKcal;
+        const totalProtein = deviceProtein + mobileProtein;
+        const totalCarbs = deviceCarbs + mobileCarbs;
+        const totalFat = deviceFat + mobileFat;
+        const totalEntries = deviceEntries + entries.length;
+        
+        // Update dashboard with COMBINED totals
+        const goal = currentTDEE || 2000;
+        
+        document.getElementById('foodCals').textContent = Math.round(totalKcal);
+        document.getElementById('goalCals').textContent = Math.round(goal);
+        document.getElementById('proteinValue').textContent = Math.round(totalProtein);
+        document.getElementById('carbsValue').textContent = Math.round(totalCarbs);
+        document.getElementById('fatValue').textContent = Math.round(totalFat);
+        document.getElementById('entriesValue').textContent = totalEntries;
+        updateProgressRing(totalKcal, goal);
+        
+        // Display grouped by meal type
+        const mealConfig = [
+          { type: 'breakfast', emoji: '🍳', label: 'Breakfast' },
+          { type: 'lunch', emoji: '🍱', label: 'Lunch' },
+          { type: 'dinner', emoji: '🍽️', label: 'Dinner' },
+          { type: 'snacks', emoji: '🍪', label: 'Snacks' }
+        ];
+        
+        let html = '';
+        
+        // Add device data indicator if present
+        if (deviceKcal > 0) {
+          html += `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); color: white;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.5rem;">📱</span>
+                <span style="font-weight: 700; font-size: 1rem;">Device Sync Data</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.9rem;">
+                <div><strong>${Math.round(deviceKcal)}</strong> kcal</div>
+                <div><strong>${Math.round(deviceProtein)}</strong>g protein</div>
+                <div><strong>${Math.round(deviceCarbs)}</strong>g carbs</div>
+                <div><strong>${Math.round(deviceFat)}</strong>g fat</div>
+              </div>
+              <div style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.9;">
+                ${deviceEntries} meal(s) logged from device • Dashboard shows combined food logs from device and app
+              </div>
+            </div>
+          `;
+        }
+        
+        mealConfig.forEach(meal => {
+          const mealEntries = mealGroups[meal.type];
+          const mealTotal = mealEntries.reduce((sum, e) => sum + (e.kcal || 0), 0);
+          
+          html += `
+            <div style="background: #fff; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: #000;">
+                  <span>${meal.emoji}</span>
+                  <span>${meal.label}</span>
+                </div>
+                <div style="font-weight: 700; color: #16a34a;">${mealTotal} kcal</div>
+              </div>
+              ${mealEntries.length === 0 ? `
+                <div style="color: #666; font-size: 0.9rem; text-align: center; padding: 1rem;">
+                  No ${meal.label.toLowerCase()} logged yet
+                </div>
+              ` : mealEntries.map((entry, index) => `
+                <div style="background: #f8f9fa; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.6rem; border-left: 4px solid #1e3a8a; position: relative;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div style="font-weight: 600; color: #000; flex: 1;">${entry.food_name || 'Unknown Food'}</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <div style="font-weight: 700; color: #16a34a; font-size: 1rem;">${entry.kcal} kcal</div>
+                      <button onclick="editFoodEntry('${entry.timestamp}')" style="background: #3b82f6; color: white; border: none; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">✏️</button>
+                      <button onclick="deleteFoodEntry('${entry.timestamp}')" style="background: #dc2626; color: white; border: none; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">🗑️</button>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: #666;">
+                    <span>P: ${entry.protein_g || 0}g</span>
+                    <span>C: ${entry.carb_g || 0}g</span>
+                    <span>F: ${entry.fat_g || 0}g</span>
+                  </div>
+                </div>
+              `).join('')}
+              <button onclick="openAddModalWithMeal('${meal.type}')" style="background: #eff6ff; border: 2px dashed #1e3a8a; padding: 0.8rem; border-radius: 8px; color: #1e3a8a; font-weight: 600; cursor: pointer; width: 100%; text-align: center; font-size: 0.9rem;">
+                + Add ${meal.label}
+              </button>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error loading food diary:', error);
+        document.getElementById('foodDiaryList').innerHTML = 
+          '<div class="empty-state">Error loading diary. Please refresh.</div>';
+      }
+    }
+    
+    // Helper function to open modal with specific meal type pre-selected
+    window.openAddModalWithMeal = function(mealType) {
+      document.getElementById('mealTypeSelector').value = mealType;
+      openAddModal();
+    };
+    
+    // ===== EDIT/DELETE FOOD ENTRIES =====
+    let pendingEditTimestamp = null;
+    let pendingDeleteTimestamp = null;
+
+    // Open edit modal
+    window.editFoodEntry = async function(timestamp) {
+      const userId = currentUserId;
+      if (!userId) { showToast('❌ Please log in first', 'error'); return; }
+
+      try {
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, getDoc: getDoc2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        let nutritionApp, nutritionDb;
+        try { nutritionApp = initApp2(nutritionConfig, 'nutrition'); nutritionDb = getFS2(nutritionApp); }
+        catch (e) { const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js'); nutritionApp = getApp('nutrition'); nutritionDb = getFS2(nutritionApp); }
+
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = phTime.toISOString().split('T')[0];
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        const logDoc = await getDoc2(logDocRef);
+        if (!logDoc.exists()) { showToast('❌ Entry not found', 'error'); return; }
+
+        const entries = logDoc.data().entries || [];
+        const entry = entries.find(e => e.timestamp === timestamp);
+        if (!entry) { showToast('❌ Entry not found', 'error'); return; }
+
+        // Store timestamp and open modal
+        pendingEditTimestamp = timestamp;
+        document.getElementById('editModalFoodName').textContent = `${entry.food_name} — current: ${entry.servings || 1} serving(s)`;
+        document.getElementById('editServingsInput').value = entry.servings || 1;
+        document.getElementById('editModal').classList.add('show');
+
+      } catch (error) {
+        console.error('Error opening edit modal:', error);
+        showToast('❌ Failed to load entry.', 'error');
+      }
+    };
+
+    window.closeEditModal = function() {
+      document.getElementById('editModal').classList.remove('show');
+      pendingEditTimestamp = null;
+    };
+
+    window.confirmEditEntry = async function() {
+      const servings = parseFloat(document.getElementById('editServingsInput').value);
+      if (isNaN(servings) || servings <= 0) { showToast('❌ Please enter a valid number', 'error'); return; }
+
+      const userId = currentUserId;
+      const timestamp = pendingEditTimestamp;
+      closeEditModal();
+
+      try {
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, getDoc: getDoc2, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        let nutritionApp, nutritionDb;
+        try { nutritionApp = initApp2(nutritionConfig, 'nutrition'); nutritionDb = getFS2(nutritionApp); }
+        catch (e) { const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js'); nutritionApp = getApp('nutrition'); nutritionDb = getFS2(nutritionApp); }
+
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = phTime.toISOString().split('T')[0];
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        const logDoc = await getDoc2(logDocRef);
+        const entries = logDoc.data().entries || [];
+        const entryIndex = entries.findIndex(e => e.timestamp === timestamp);
+        const entry = entries[entryIndex];
+
+        const baseKcal    = entry.kcal / (entry.servings || 1);
+        const baseProtein = entry.protein_g / (entry.servings || 1);
+        const baseCarbs   = entry.carb_g / (entry.servings || 1);
+        const baseFat     = entry.fat_g / (entry.servings || 1);
+
+        entries[entryIndex] = {
+          ...entry,
+          servings,
+          kcal:      Math.round(baseKcal * servings),
+          protein_g: Math.round(baseProtein * servings),
+          carb_g:    Math.round(baseCarbs * servings),
+          fat_g:     Math.round(baseFat * servings)
+        };
+
+        await updateDoc(logDocRef, { entries });
+        await loadFoodDiary(userId);
+        showToast('✅ Entry updated!', 'success');
+
+      } catch (error) {
+        console.error('Error editing entry:', error);
+        showToast('❌ Failed to update entry.', 'error');
+      }
+    };
+    
+    // Open delete modal
+    window.deleteFoodEntry = async function(timestamp) {
+      const userId = currentUserId;
+      if (!userId) { showToast('❌ Please log in first', 'error'); return; }
+
+      // Get food name for the modal
+      try {
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, getDoc: getDoc2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        let nutritionApp, nutritionDb;
+        try { nutritionApp = initApp2(nutritionConfig, 'nutrition'); nutritionDb = getFS2(nutritionApp); }
+        catch (e) { const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js'); nutritionApp = getApp('nutrition'); nutritionDb = getFS2(nutritionApp); }
+
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = phTime.toISOString().split('T')[0];
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        const logDoc = await getDoc2(logDocRef);
+        const entries = logDoc.data().entries || [];
+        const entry = entries.find(e => e.timestamp === timestamp);
+
+        pendingDeleteTimestamp = timestamp;
+        document.getElementById('deleteModalFoodName').textContent = 
+          `Are you sure you want to delete "${entry ? entry.food_name : 'this entry'}"?`;
+        document.getElementById('deleteModal').classList.add('show');
+
+      } catch (error) {
+        // Even if fetch fails, still show delete modal
+        pendingDeleteTimestamp = timestamp;
+        document.getElementById('deleteModalFoodName').textContent = 'Are you sure you want to delete this entry?';
+        document.getElementById('deleteModal').classList.add('show');
+      }
+    };
+
+    window.closeDeleteModal = function() {
+      document.getElementById('deleteModal').classList.remove('show');
+      pendingDeleteTimestamp = null;
+    };
+
+    window.confirmDeleteEntry = async function() {
+      const userId = currentUserId;
+      const timestamp = pendingDeleteTimestamp;
+      closeDeleteModal();
+
+      try {
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, getDoc: getDoc2, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        let nutritionApp, nutritionDb;
+        try { nutritionApp = initApp2(nutritionConfig, 'nutrition'); nutritionDb = getFS2(nutritionApp); }
+        catch (e) { const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js'); nutritionApp = getApp('nutrition'); nutritionDb = getFS2(nutritionApp); }
+
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = phTime.toISOString().split('T')[0];
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        const logDoc = await getDoc2(logDocRef);
+        let entries = logDoc.data().entries || [];
+        entries = entries.filter(e => e.timestamp !== timestamp);
+
+        await updateDoc(logDocRef, { entries });
+        await loadFoodDiary(userId);
+        showToast('🗑️ Entry deleted!', 'success');
+
+      } catch (error) {
+        console.error('Error deleting entry:', error);
+        showToast('❌ Failed to delete entry.', 'error');
+      }
+    };
+
+    // ===== TOAST NOTIFICATION =====
+    let toastTimer = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toastNotif');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // ===== NAVIGATION =====
+    
+    window.switchTab = function(tabName) {
+      document.querySelectorAll('.main-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      document.getElementById(tabName + 'Content').classList.add('active');
+
+      const navItems = document.querySelectorAll('.nav-item');
+      const tabOrder = ['dashboard', 'diary', 'add', 'progress', 'profile'];
+      const index = tabOrder.indexOf(tabName);
+      if (index !== -1 && index !== 2) {
+        navItems[index].classList.add('active');
+      }
+
+      if (tabName === 'diary' && currentUserId) {
+        loadFoodDiary(currentUserId);
+      }
+      
+      if (tabName === 'progress' && currentUserId) {
+        loadWeightProgress(currentUserId);
+      }
+    };
+
+    window.openAddModal = function() {
+      document.getElementById('addFoodModal').classList.add('show');
+      if (FOOD_DATABASE.length === 0) {
+        // Show loading state while CSV loads
+        document.getElementById('foodSearchResults').innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: #666;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⏳</div>
+            <div style="font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">Loading food database...</div>
+            <div style="font-size: 0.85rem;">Please wait a moment</div>
+          </div>
+        `;
+        loadFoodDatabase(function() {
+          searchFoods();
+        });
+      } else {
+        searchFoods();
+      }
+    };
+
+    window.closeAddModal = function() {
+      document.getElementById('addFoodModal').classList.remove('show');
+    };
+    
+    window.showRegisterModal = function() {
+      document.getElementById('registerModal').classList.add('show');
+    };
+    
+    window.closeRegisterModal = function() {
+      document.getElementById('registerModal').classList.remove('show');
+    };
+    
+    // Food Search Variables (using existing FOOD_DATABASE from meal plan section)
+    let currentFoodCategory = 'all';
+    
+    // Filter by category
+    window.filterFoodCategory = function(category) {
+      currentFoodCategory = category;
+      
+      // Update tab styles
+      document.querySelectorAll('.food-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      searchFoods();
+    };
+    
+    // Search foods
+    window.searchFoods = function() {
+      const query = document.getElementById('foodSearchInput').value.toLowerCase().trim();
+      let results = FOOD_DATABASE;
+      
+      // Filter by category
+      if (currentFoodCategory !== 'all') {
+        results = results.filter(food => food.category === currentFoodCategory);
+      }
+      
+      // Filter by search query
+      if (query) {
+        results = results.filter(food => 
+          food.name.toLowerCase().includes(query) ||
+          (food.alt_names && food.alt_names.toLowerCase().includes(query))
+        );
+      }
+      
+      // Sort by relevance
+      if (query) {
+        results.sort((a, b) => {
+          const aStarts = a.name.toLowerCase().startsWith(query);
+          const bStarts = b.name.toLowerCase().startsWith(query);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return 0;
+        });
+      }
+      
+      // Show all results when no search query, limit to 100 when searching
+      displayFoodResults(query ? results.slice(0, 100) : results);
+    };
+    
+    // Display food results
+    let currentDisplayedResults = [];
+    let currentDisplayCount = 50;
+
+    function displayFoodResults(results) {
+      const container = document.getElementById('foodSearchResults');
+      currentDisplayedResults = results;
+      currentDisplayCount = 50;
+      
+      if (results.length === 0) {
+        container.innerHTML = '<div class="empty-state">No foods found. Try a different search.</div>';
+        return;
+      }
+      
+      renderFoodItems(container, results, currentDisplayCount);
+    }
+
+    function renderFoodItems(container, results, count) {
+      const visible = results.slice(0, count);
+      const remaining = results.length - count;
+
+      container.innerHTML = visible.map(food => `
+        <div class="food-result">
+          <div class="food-info">
+            <div class="food-title">${food.name} <span class="food-verified">✓</span></div>
+            <div class="food-meta">${Math.round(food.calories)} cal, ${food.portion}</div>
+          </div>
+          <button class="food-add-btn" id="addbtn-${food.id}" onclick="addFoodToMeal('${food.id}', this)">+</button>
+        </div>
+      `).join('');
+
+      // Add "Load More" button if there are more results
+      if (remaining > 0) {
+        container.innerHTML += `
+          <div style="text-align: center; padding: 1rem;">
+            <button onclick="loadMoreFoods()" style="background: #eff6ff; border: 2px solid #1e3a8a; color: #1e3a8a; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+              Load ${Math.min(remaining, 50)} more (${remaining} remaining)
+            </button>
+          </div>
+        `;
+      }
+
+      // Show total count
+      const countDiv = document.createElement('div');
+      countDiv.style = 'font-size: 0.8rem; color: #666; text-align: right; margin-bottom: 0.5rem;';
+      countDiv.textContent = `Showing ${Math.min(count, results.length)} of ${results.length} foods`;
+      container.insertBefore(countDiv, container.firstChild);
+    }
+
+    window.loadMoreFoods = function() {
+      currentDisplayCount += 50;
+      const container = document.getElementById('foodSearchResults');
+      renderFoodItems(container, currentDisplayedResults, currentDisplayCount);
+    };
+    
+    // Clear search
+    window.clearFoodSearch = function() {
+      document.getElementById('foodSearchInput').value = '';
+      searchFoods();
+    };
+    
+    // Add food to meal (will sync to Firebase)
+    window.addFoodToMeal = async function(foodId, btnEl) {
+      const food = FOOD_DATABASE.find(f => f.id === foodId);
+      if (!food) return;
+
+      const mealType = document.getElementById('mealTypeSelector').value;
+      const userId = currentUserId;
+
+      if (!userId) {
+        showToast('❌ Please log in first', 'error');
+        return;
+      }
+
+      // Disable button and show loading
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = '⏳';
+        btnEl.style.fontSize = '1rem';
+      }
+
+      try {
+        // Initialize Firebase 2 (fittrackai-nutrition) for saving food logs
+        const nutritionConfig = {
+          apiKey: "AIzaSyBNYX1dL7ByoqWnNUuNoE1_q65GyFkCxjw",
+          authDomain: "fittrackai-nutrition.firebaseapp.com",
+          projectId: "fittrackai-nutrition",
+          storageBucket: "fittrackai-nutrition.firebasestorage.app",
+          messagingSenderId: "546616532181",
+          appId: "1:546616532181:web:f26d336dd09b9dd51e165c"
+        };
+        
+        // Import Firebase functions for writing
+        const { initializeApp: initApp2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getFirestore: getFS2, doc: doc2, setDoc, getDoc: getDoc2, updateDoc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        // Initialize nutrition Firebase (if not already)
+        let nutritionApp, nutritionDb;
+        try {
+          nutritionApp = initApp2(nutritionConfig, 'nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        } catch (e) {
+          // App might already be initialized
+          const { getApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+          nutritionApp = getApp('nutrition');
+          nutritionDb = getFS2(nutritionApp);
+        }
+        
+        // Get today's date in Philippine timezone (UTC+8)
+        const now = new Date();
+        const phTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for PH timezone
+        const today = phTime.toISOString().split('T')[0];
+        const logDocRef = doc2(nutritionDb, 'users', userId, 'nutrition_logs', today);
+        
+        // Create the entry
+        const entry = {
+          food_id: food.id,
+          food_name: food.name,
+          meal: mealType,
+          kcal: Math.round(food.calories),
+          protein_g: Math.round(food.protein),
+          carb_g: Math.round(food.carbs),
+          fat_g: Math.round(food.fat),
+          servings: 1,
+          grams: null,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Check if document exists
+        const docSnap = await getDoc2(logDocRef);
+        
+        if (docSnap.exists()) {
+          // Document exists, update it
+          await updateDoc(logDocRef, {
+            entries: arrayUnion(entry),
+            last_updated: new Date().toISOString()
+          });
+        } else {
+          // Document doesn't exist, create it
+          await setDoc(logDocRef, {
+            user_id: userId,
+            date: today,
+            entries: [entry],
+            last_updated: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          });
+        }
+        
+        // Show checkmark briefly then close
+        if (btnEl) {
+          btnEl.textContent = '✓';
+          btnEl.style.background = '#059669';
+        }
+
+        setTimeout(() => {
+          // Close modal and switch to diary
+          closeAddModal();
+          loadFoodDiary(userId);
+          switchTab('diary');
+          showToast(`✅ ${food.name} added to ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}!`, 'success');
+        }, 400);
+
+      } catch (error) {
+        console.error('Error adding food:', error);
+        // Re-enable button on error
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.textContent = '+';
+          btnEl.style.fontSize = '';
+          btnEl.style.background = '';
+        }
+        showToast('❌ Failed to add food. Please try again.', 'error');
+      }
+    };
+
+    // ===== UTILITIES =====
+    
+    function showError(message) {
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+      
+      setTimeout(() => {
+        errorDiv.classList.remove('show');
+      }, 5000);
+    }
+
+    // ===== AUTO-LOGIN IF SESSION EXISTS =====
+    const savedUserId = localStorage.getItem('fittrackai_userId');
+    if (savedUserId) {
+      console.log('Found saved session:', savedUserId);
+      currentUserId = savedUserId;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      
+      // Show chatbot button on auto-login
+      document.getElementById('chatbotButton').classList.remove('hidden');
+      
+      // Switch to dashboard IMMEDIATELY before loading data
+      switchTab('dashboard');
+      
+      loadUserData(savedUserId);
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('addFoodModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddModal();
+      }
+    });
+
+    // ===== MEAL PLAN GENERATION =====
+    
+    let FOOD_DATABASE = [];
+    let currentTDEE = 2000; // Default, will be updated from user data
+    let mealPlanGenerated = false; // Track if meal plan was auto-generated
+    
+    // Load CSV food database
+    function loadFoodDatabase(callback) {
+      const csvUrl = 'https://raw.githubusercontent.com/pullancu-dev/filipino-meal-planner-chatbot-nn/refs/heads/main/chatbot_food_database_COMPLETE.csv';
+      
+      Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          FOOD_DATABASE = results.data.map((row, index) => ({
+            id: row.food_id || `food_${index}`,
+            name: row.food_name,
+            alt_names: row.alt_names,
+            category: row.category,
+            meal_type: row.meal_type,
+            calories: parseFloat(row.calories) || 0,
+            protein: parseFloat(row.protein) || 0,
+            carbs: parseFloat(row.carbs) || 0,
+            fat: parseFloat(row.fat) || 0,
+            portion: row.portion || '1 serving',
+            has_pork: row.has_pork === 'yes',
+            has_beef: row.has_beef === 'yes',
+            has_chicken: row.has_chicken === 'yes',
+            has_seafood: row.has_seafood === 'yes',
+            has_fish: row.has_fish === 'yes',
+            is_vegetarian: row.is_vegetarian === 'yes',
+            is_high_protein: row.is_high_protein === 'yes',
+            is_low_carb: row.is_low_carb === 'yes'
+          })).filter(food => food.name && food.calories > 0);
+          
+          console.log(`✅ Loaded ${FOOD_DATABASE.length} foods from database`);
+          if (callback) callback(); // Call callback when done
+        },
+        error: function(error) {
+          console.error('❌ Error loading CSV:', error);
+          loadFallbackDatabase();
+          if (callback) callback(); // Call callback even on error (fallback loaded)
+        }
+      });
+    }
+    
+    // Fallback minimal database if CSV fails to load
+    function loadFallbackDatabase() {
+      FOOD_DATABASE = [
+        // Breakfast
+        {id: 'B001', name: 'Tapsilog', category: 'Mixed Dishes & Prepared Foods', meal_type: 'breakfast', calories: 550, protein: 35, carbs: 45, fat: 25, portion: '1 serving'},
+        {id: 'B002', name: 'Longsilog', category: 'Mixed Dishes & Prepared Foods', meal_type: 'breakfast', calories: 580, protein: 32, carbs: 50, fat: 28, portion: '1 serving'},
+        {id: 'B005', name: 'Silog', category: 'Mixed Dishes & Prepared Foods', meal_type: 'breakfast', calories: 350, protein: 12, carbs: 45, fat: 15, portion: '1 serving'},
+        {id: 'B015', name: 'Champorado', category: 'Sweets & Desserts', meal_type: 'breakfast', calories: 280, protein: 6, carbs: 58, fat: 3, portion: '1 serving'},
+        
+        // Main dishes
+        {id: 'M001', name: 'Chicken Adobo', category: 'Meat & Poultry', meal_type: 'main', calories: 295, protein: 30, carbs: 10, fat: 15, portion: '1 serving'},
+        {id: 'M002', name: 'Sinigang na Baboy', category: 'Mixed Dishes & Prepared Foods', meal_type: 'main', calories: 350, protein: 25, carbs: 15, fat: 20, portion: '1 serving'},
+        {id: 'M003', name: 'Tinola', category: 'Mixed Dishes & Prepared Foods', meal_type: 'main', calories: 200, protein: 25, carbs: 8, fat: 8, portion: '1 serving'},
+        {id: 'M004', name: 'Grilled Bangus', category: 'Fish & Seafood', meal_type: 'main', calories: 250, protein: 32, carbs: 2, fat: 12, portion: '1 serving'},
+        
+        // Rice/Base
+        {id: 'U001', name: 'White Rice', category: 'Grains & Cereals', meal_type: 'base', calories: 120, protein: 2, carbs: 28, fat: 0, portion: '1 serving'},
+        
+        // Snacks
+        {id: 'S001', name: 'Banana', category: 'Mixed Dishes & Prepared Foods', meal_type: 'snack', calories: 105, protein: 1, carbs: 27, fat: 0, portion: '1 piece'},
+        {id: 'S002', name: 'Hard Boiled Egg', category: 'Eggs', meal_type: 'snack', calories: 73, protein: 6, carbs: 1, fat: 5, portion: '1 piece'},
+        {id: 'S003', name: 'Taho', category: 'Sweets & Desserts', meal_type: 'snack', calories: 117, protein: 8, carbs: 11, fat: 5, portion: '1 serving'}
+      ];
+      console.log('⚠️ Using fallback database with limited foods');
+    }
+    
+    // Shuffle array helper
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    
+    // Generate meal plan based on TDEE
+    window.generateMealPlan = function() {
+      if (FOOD_DATABASE.length === 0) {
+        document.getElementById('mealPlanContent').innerHTML = 
+          '<div class="empty-state">⚠️ Food database is loading... Please try again in a moment.</div>';
+        return;
+      }
+      
+      const btn = document.getElementById('generatePlanBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span><span>Generating...</span>';
+      
+      setTimeout(() => {
+        const targetCalories = currentTDEE || 2000;
+        const maxDifference = targetCalories * 0.10; // 10% maximum
+        
+        let bestPlan = null;
+        let bestDiff = Infinity;
+        const maxAttempts = 20; // Try up to 20 times to get ≤10%
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          // Calorie distribution
+          const breakfastCal = targetCalories * 0.25;
+          const lunchCal = targetCalories * 0.35;
+          const dinnerCal = targetCalories * 0.30;
+          const snackCal = targetCalories * 0.10;
+          
+          // Select meals
+          const breakfast = selectMeal('breakfast', breakfastCal);
+          const lunch = selectMainMeal(lunchCal);
+          const dinner = selectMainMeal(dinnerCal);
+          const snack = selectMeal('snack', snackCal);
+          
+          // Calculate total
+          const plan = {breakfast, lunch, dinner, snack};
+          const total = [...breakfast, ...lunch, ...dinner, ...snack]
+            .reduce((sum, item) => sum + item.calories, 0);
+          const diff = Math.abs(total - targetCalories);
+          
+          // Keep track of best plan
+          if (diff < bestDiff) {
+            bestPlan = plan;
+            bestDiff = diff;
+          }
+          
+          // If within 10%, use it immediately
+          if (diff <= maxDifference) {
+            displayMealPlan(plan, targetCalories);
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔄</span><span>Regenerate Plan</span>';
+            return;
+          }
+        }
+        
+        // If after 20 attempts still >10%, use the best one we found
+        displayMealPlan(bestPlan, targetCalories);
+        
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔄</span><span>Regenerate Plan</span>';
+      }, 500);
+    };
+    
+    // Select meal items with better accuracy
+    function selectMeal(mealType, targetCal) {
+      const foods = FOOD_DATABASE.filter(f => f.meal_type === mealType);
+      if (foods.length === 0) return [];
+      
+      const shuffled = shuffle(foods);
+      const selected = [];
+      let totalCal = 0;
+      const tolerance = targetCal * 0.05; // Tighter tolerance: 5%
+      
+      // Pick randomly from top candidates for variety
+      const candidates = shuffled.map(food => ({
+        food: food,
+        diff: Math.abs(food.calories - targetCal)
+      })).sort((a, b) => a.diff - b.diff);
+      
+      const topCandidates = candidates.slice(0, Math.min(5, candidates.length));
+      const randomPick = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+      const bestSingle = randomPick.food;
+      
+      // If single item is within 7% of target, use it
+      if (Math.abs(bestSingle.calories - targetCal) <= targetCal * 0.07) {
+        return [bestSingle];
+      }
+      
+      // Otherwise, try combination of 2 items
+      for (let i = 0; i < shuffled.length && selected.length < 2; i++) {
+        const food = shuffled[i];
+        const newTotal = totalCal + food.calories;
+        
+        // Add if it gets us closer to target
+        if (newTotal <= targetCal + tolerance) {
+          selected.push(food);
+          totalCal = newTotal;
+          
+          // Stop if we're very close
+          if (Math.abs(totalCal - targetCal) <= tolerance) break;
+        }
+      }
+      
+      return selected.length > 0 ? selected : [bestSingle];
+    }
+    
+    // Select main meal with rice - more accurate
+    function selectMainMeal(targetCal) {
+      const rice = FOOD_DATABASE.find(f => f.meal_type === 'base' && f.name.includes('Rice'));
+      const ulam = FOOD_DATABASE.filter(f => f.meal_type === 'main');
+      
+      if (ulam.length === 0) return rice ? [rice] : [];
+      
+      const riceCalories = rice ? rice.calories : 0;
+      const remainingCal = targetCal - riceCalories;
+      const tolerance = targetCal * 0.05; // Tighter: 5%
+      
+      const shuffled = shuffle(ulam);
+      const selected = [];
+      
+      // Add rice first
+      if (rice) {
+        selected.push(rice);
+      }
+      
+      let totalCal = riceCalories;
+      
+      // Pick randomly from top candidates for variety
+      const candidates = shuffled.map(food => {
+        const withFood = totalCal + food.calories;
+        return {
+          food: food,
+          diff: Math.abs(withFood - targetCal)
+        };
+      }).sort((a, b) => a.diff - b.diff);
+      
+      const topCandidates = candidates.slice(0, Math.min(5, candidates.length));
+      const randomPick = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+      const bestSingle = randomPick.food;
+      const singleTotal = totalCal + bestSingle.calories;
+      
+      // If single ulam + rice is close enough (within 7%), use it
+      if (Math.abs(singleTotal - targetCal) <= targetCal * 0.07) {
+        selected.push(bestSingle);
+        return selected;
+      }
+      
+      // Otherwise try 2 ulam
+      for (let i = 0; i < shuffled.length && selected.length < 3; i++) {
+        const food = shuffled[i];
+        const newTotal = totalCal + food.calories;
+        
+        if (newTotal <= targetCal + tolerance) {
+          selected.push(food);
+          totalCal = newTotal;
+          
+          if (Math.abs(totalCal - targetCal) <= tolerance) break;
+        }
+      }
+      
+      // If still empty, at least add the best single
+      if (selected.length === 1 && rice) {
+        selected.push(bestSingle);
+      }
+      
+      return selected.length > 0 ? selected : (rice ? [rice, shuffled[0]] : [shuffled[0]]);
+    }
+    
+    // Display meal plan
+    function displayMealPlan(plan, totalTarget) {
+      const meals = [
+        {name: 'Breakfast', emoji: '🍳', items: plan.breakfast, target: totalTarget * 0.25},
+        {name: 'Lunch', emoji: '🍱', items: plan.lunch, target: totalTarget * 0.35},
+        {name: 'Dinner', emoji: '🍽️', items: plan.dinner, target: totalTarget * 0.30},
+        {name: 'Snacks', emoji: '🍪', items: plan.snack, target: totalTarget * 0.10}
+      ];
+      
+      let html = '';
+      let grandTotal = 0;
+      
+      meals.forEach(meal => {
+        const mealTotal = meal.items.reduce((sum, item) => sum + item.calories, 0);
+        grandTotal += mealTotal;
+        
+        html += `
+          <div class="meal-section">
+            <div class="meal-section-header">
+              <div class="meal-section-title">
+                <span>${meal.emoji}</span>
+                <span>${meal.name}</span>
+              </div>
+              <div class="meal-section-calories">${Math.round(mealTotal)} kcal</div>
+            </div>
+            <div class="meal-items">
+              ${meal.items.map(item => `
+                <div class="meal-item">
+                  <div class="meal-item-info">
+                    <div class="meal-item-name">${item.name}</div>
+                    <div class="meal-item-macros">
+                      <span>P: ${Math.round(item.protein)}g</span>
+                      <span>C: ${Math.round(item.carbs)}g</span>
+                      <span>F: ${Math.round(item.fat)}g</span>
+                    </div>
+                  </div>
+                  <div class="meal-item-calories">
+                    ${Math.round(item.calories)}<span class="unit">kcal</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+        <div class="meal-plan-total">
+          <div class="meal-plan-total-label">Total Daily Calories</div>
+          <div class="meal-plan-total-value">${Math.round(grandTotal)} kcal</div>
+          <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
+            Target: ${Math.round(totalTarget)} kcal 
+            <span style="color: ${Math.abs(grandTotal - totalTarget) <= totalTarget * 0.05 ? '#10b981' : Math.abs(grandTotal - totalTarget) <= totalTarget * 0.08 ? '#f59e0b' : '#ef4444'};">
+              (${grandTotal > totalTarget ? '+' : ''}${Math.round(grandTotal - totalTarget)} kcal, ${Math.abs(((grandTotal - totalTarget) / totalTarget * 100)).toFixed(1)}%)
+            </span>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('mealPlanContent').innerHTML = html;
+    }
+    
+    // Load database on page load
+    loadFoodDatabase(null); // Load from GitHub CSV
+  </script>
+
+  <!-- Chatbot Widget - Hidden until login -->
+  <div class="chatbot-button hidden" onclick="toggleChatbot()" id="chatbotButton">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3 .97 4.29L2 22l5.71-.97C9 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.38 0-2.68-.29-3.85-.81l-.27-.13-2.82.48.48-2.82-.13-.27C4.29 14.68 4 13.38 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z"/>
+      <path d="M9 11h2v2H9zm4 0h2v2h-2z"/>
+    </svg>
+  </div>
+
+  <div class="chatbot-modal" id="chatbotModal">
+    <div class="chatbot-header">
+      <h3>🍽️ AI Meal Planner</h3>
+      <button class="chatbot-close" onclick="toggleChatbot()">×</button>
+    </div>
+    <iframe 
+      class="chatbot-iframe" 
+      src="https://pullancu-dev.github.io/filipino-meal-planner-chatbot-nn"
+      title="Filipino Meal Planner Chatbot"
+    ></iframe>
+  </div>
+
+  <script>
+    function toggleChatbot() {
+      const modal = document.getElementById('chatbotModal');
+      modal.classList.toggle('active');
+    }
+  </script>
+
+</body>
+</html>
